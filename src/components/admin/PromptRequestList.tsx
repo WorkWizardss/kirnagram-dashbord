@@ -9,16 +9,17 @@ interface PromptRequestListProps {
   requests: PromptRequest[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  subtitle?: string;
 }
 
 const statusConfig = {
   pending: { icon: Clock, color: "text-yellow-500", bg: "bg-yellow-500/10" },
   approved: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   rejected: { icon: XCircle, color: "text-red-500", bg: "bg-red-500/10" },
-  needs_modification: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
+  modify: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
 };
 
-export function PromptRequestList({ requests, selectedId, onSelect }: PromptRequestListProps) {
+export function PromptRequestList({ requests, selectedId, onSelect, subtitle }: PromptRequestListProps) {
   return (
     <div className="h-full flex flex-col bg-card/50 border-r border-border">
       <div className="p-4 border-b border-border">
@@ -27,7 +28,7 @@ export function PromptRequestList({ requests, selectedId, onSelect }: PromptRequ
           Requests
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
-          {requests.filter(r => r.status === "pending").length} pending review
+          {subtitle || `${requests.filter(r => r.status === "pending").length} pending review`}
         </p>
       </div>
       
@@ -65,12 +66,19 @@ export function PromptRequestList({ requests, selectedId, onSelect }: PromptRequ
                       {request.title}
                     </p>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      by {request.creator}
+                      by {request.creatorName || request.creatorUsername || "Creator"}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                        {request.category}
-                      </Badge>
+                      {request.unitId && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                          {request.unitId}
+                        </Badge>
+                      )}
+                      {request.aiModel && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                          {request.aiModel}
+                        </Badge>
+                      )}
                       <span className="text-[10px] text-muted-foreground">
                         {formatDistanceToNow(request.submittedAt, { addSuffix: true })}
                       </span>

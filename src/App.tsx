@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Agents from "./pages/Agents";
 import Prompts from "./pages/Prompts";
+import ApprovedPrompts from "./pages/ApprovedPrompts";
 import Ads from "./pages/Ads";
 import Currency from "./pages/Currency";
 import AICreatorRequests from "./pages/AICreatorRequests";
@@ -32,6 +33,7 @@ const App = () => (
               </Route>
               <Route element={<RequireAdminOrAgent type="agent" requiredPermission="prompts" />}>
                 <Route path="/prompts" element={<Prompts />} />
+                <Route path="/approved-prompts" element={<ApprovedPrompts />} />
               </Route>
               <Route element={<RequireAdminOrAgent type="agent" requiredPermission="ads" />}>
                 <Route path="/ads" element={<Ads />} />

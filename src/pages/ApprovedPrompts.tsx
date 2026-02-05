@@ -4,9 +4,8 @@ import { PromptRequestList } from "@/components/admin/PromptRequestList";
 import { PromptPreview } from "@/components/admin/PromptPreview";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { PromptRequest } from "@/types/prompt";
-import { toast } from "sonner";
 
-const Prompts = () => {
+const ApprovedPrompts = () => {
   const [requests, setRequests] = useState<PromptRequest[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,7 @@ const Prompts = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_URL}?status=pending`);
+        const res = await fetch(`${API_URL}?status=approved`);
         if (!res.ok) throw new Error("Failed to fetch prompts");
         const data = await res.json();
         const mapped: PromptRequest[] = (Array.isArray(data) ? data : []).map((p: any) => ({
@@ -57,60 +56,13 @@ const Prompts = () => {
     fetchRequests();
   }, []);
 
-  const handleAccept = async (id: string) => {
-    try {
-      const res = await fetch(`${API_URL}/${id}/approve`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to approve");
-      const payload = await res.json();
-      setRequests((prev) =>
-        prev.filter((r) => r.id !== id)
-      );
-      setSelectedId(null);
-      toast.success("Prompt accepted and published live!");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to approve");
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    try {
-      const reason = window.prompt("Rejection reason (optional)") || "";
-      const url = reason ? `${API_URL}/${id}/reject?reason=${encodeURIComponent(reason)}` : `${API_URL}/${id}/reject`;
-      const res = await fetch(url, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to reject");
-      setRequests((prev) =>
-        prev.filter((r) => r.id !== id)
-      );
-      setSelectedId(null);
-      toast.error("Prompt has been rejected.");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to reject");
-    }
-  };
-
-  const handleModify = async (id: string) => {
-    try {
-      const reason = window.prompt("Modification reason (optional)") || "";
-      const url = reason ? `${API_URL}/${id}/modify?reason=${encodeURIComponent(reason)}` : `${API_URL}/${id}/modify`;
-      const res = await fetch(url, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to request modification");
-      setRequests((prev) =>
-        prev.filter((r) => r.id !== id)
-      );
-      setSelectedId(null);
-      toast.info("Modification request sent to creator.");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to request modification");
-    }
-  };
-
   return (
     <AdminLayout>
       <div className="h-[calc(100vh-0px)] flex flex-col">
         <div className="p-6 border-b border-border shrink-0">
-          <h1 className="text-2xl font-display font-bold text-foreground">Prompts</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">Approved Prompts</h1>
           <p className="text-sm text-muted-foreground">
-            Review and manage creator prompt submissions.
+            All approved prompts with stats and creator details.
           </p>
         </div>
 
@@ -127,7 +79,7 @@ const Prompts = () => {
                 requests={requests}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
-                subtitle={`${requests.length} pending review`}
+                subtitle={`${requests.length} approved`}
               />
             </ResizablePanel>
             
@@ -136,9 +88,9 @@ const Prompts = () => {
             <ResizablePanel defaultSize={75}>
               <PromptPreview
                 request={selectedRequest}
-                onAccept={handleAccept}
-                onReject={handleReject}
-                onModify={handleModify}
+                onAccept={() => undefined}
+                onReject={() => undefined}
+                onModify={() => undefined}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -148,4 +100,4 @@ const Prompts = () => {
   );
 };
 
-export default Prompts;
+export default ApprovedPrompts;

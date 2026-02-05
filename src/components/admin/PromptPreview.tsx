@@ -36,7 +36,7 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
     );
   }
 
-  const isPending = request.status === "pending";
+  const isActionable = request.status === "pending" || request.status === "modify";
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -50,17 +50,21 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
             <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <User className="w-4 h-4" />
-                {request.creator}
+                {request.creatorName || request.creatorUsername || "Creator"}
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
                 {format(request.submittedAt, "MMM d, yyyy 'at' h:mm a")}
               </span>
             </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              {request.creatorEmail && <span>Email: {request.creatorEmail}</span>}
+              {request.creatorMobile && <span className="ml-3">Mobile: {request.creatorMobile}</span>}
+            </div>
           </div>
           
           {/* Action Buttons */}
-          {isPending && (
+          {isActionable && (
             <div className="flex items-center gap-2 shrink-0">
               <Button
                 onClick={() => onAccept(request.id)}
@@ -88,19 +92,19 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
             </div>
           )}
           
-          {!isPending && (
+          {!isActionable && (
             <Badge 
               variant="outline" 
               className={cn(
                 "text-sm px-3 py-1",
                 request.status === "approved" && "border-emerald-500/50 text-emerald-500 bg-emerald-500/10",
                 request.status === "rejected" && "border-red-500/50 text-red-500 bg-red-500/10",
-                request.status === "needs_modification" && "border-orange-500/50 text-orange-500 bg-orange-500/10"
+                request.status === "modify" && "border-orange-500/50 text-orange-500 bg-orange-500/10"
               )}
             >
               {request.status === "approved" && "Approved"}
               {request.status === "rejected" && "Rejected"}
-              {request.status === "needs_modification" && "Needs Modification"}
+              {request.status === "modify" && "Needs Modification"}
             </Badge>
           )}
         </div>
@@ -109,15 +113,15 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-6">
-          {/* Category & Style */}
+          {/* AI Model & Unit ID */}
           <div className="grid grid-cols-2 gap-4">
             <Card className="bg-card/50 border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Tag className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Category</span>
+                  <span className="text-xs font-medium uppercase tracking-wider">AI Model</span>
                 </div>
-                <p className="text-foreground font-medium">{request.category}</p>
+                <p className="text-foreground font-medium">{request.aiModel || "-"}</p>
               </CardContent>
             </Card>
             
@@ -125,9 +129,9 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Palette className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Style</span>
+                  <span className="text-xs font-medium uppercase tracking-wider">Prompt ID</span>
                 </div>
-                <p className="text-foreground font-medium">{request.style}</p>
+                <p className="text-foreground font-medium">{request.unitId || "-"}</p>
               </CardContent>
             </Card>
           </div>
@@ -141,11 +145,29 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
               </div>
               <div className="bg-background/50 rounded-lg p-4 border border-border">
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                  {request.content}
+                  {request.promptDescription}
                 </p>
               </div>
             </CardContent>
           </Card>
+
+          {(request.likesCount || request.viewsCount || request.commentsCount || request.remixesCount) && (
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { label: "Likes", value: request.likesCount ?? 0 },
+                { label: "Views", value: request.viewsCount ?? 0 },
+                { label: "Comments", value: request.commentsCount ?? 0 },
+                { label: "Remixes", value: request.remixesCount ?? 0 },
+              ].map((item) => (
+                <Card key={item.label} className="bg-card/50 border-border">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                    <p className="text-lg font-semibold text-foreground mt-1">{item.value}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Tags */}
           <Card className="bg-card/50 border-border">
@@ -155,18 +177,34 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
                 <span className="text-xs font-medium uppercase tracking-wider">Tags</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {request.tags.map((tag) => (
-                  <Badge 
-                    key={tag} 
-                    variant="secondary"
-                    className="bg-primary/10 text-primary border-primary/20"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
+                {request.tags.length > 0 ? (
+                  request.tags.map((tag) => (
+                    <Badge 
+                      key={tag} 
+                      variant="secondary"
+                      className="bg-primary/10 text-primary border-primary/20"
+                    >
+                      {tag}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-xs text-muted-foreground">No tags</span>
+                )}
               </div>
             </CardContent>
           </Card>
+
+          {request.reason && (
+            <Card className="bg-card/50 border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                  <Edit3 className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Reason</span>
+                </div>
+                <p className="text-foreground whitespace-pre-wrap leading-relaxed">{request.reason}</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Preview Image */}
           {request.previewImage && (
@@ -180,7 +218,7 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
                   <img 
                     src={request.previewImage} 
                     alt="Preview" 
-                    className="w-full h-auto object-cover"
+                    className="w-full max-h-[360px] object-contain bg-background"
                   />
                 </div>
               </CardContent>
