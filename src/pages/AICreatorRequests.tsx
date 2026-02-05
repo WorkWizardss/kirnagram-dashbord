@@ -53,15 +53,27 @@ const AICreatorRequests = () => {
     fetchRequests();
   }, []);
 
-  const filteredRequests = useMemo(
-    () =>
-      requests.filter((req) =>
-        req.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    [requests, searchQuery],
-  );
+  const filteredRequests = useMemo(() => {
+    const filtered = requests.filter((req) =>
+      req.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const order = {
+      approved: 0,
+      pending: 1,
+      modify: 2,
+      rejected: 3,
+    } as const;
+
+    return filtered.sort((a, b) => {
+      const statusA = order[a.status] ?? 99;
+      const statusB = order[b.status] ?? 99;
+      if (statusA !== statusB) return statusA - statusB;
+      return b.submittedAt.getTime() - a.submittedAt.getTime();
+    });
+  }, [requests, searchQuery]);
 
   // Approve/reject handlers (call backend)
   const handleApprove = async (id: string) => {
