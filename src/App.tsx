@@ -9,6 +9,7 @@ import Prompts from "./pages/Prompts";
 import ApprovedPrompts from "./pages/ApprovedPrompts";
 import Ads from "./pages/Ads";
 import Currency from "./pages/Currency";
+import CreditsSettings from "./pages/CreditsSettings";
 import AICreatorRequests from "./pages/AICreatorRequests";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
@@ -40,6 +41,7 @@ const App = () => (
               </Route>
               <Route element={<RequireAdminOrAgent type="agent" requiredPermission="currency" />}>
                 <Route path="/currency" element={<Currency />} />
+                <Route path="/credits" element={<CreditsSettings />} />
               </Route>
               <Route element={<RequireAdminOrAgent type="agent" />}>
                 <Route path="/ai-creators" element={<AICreatorRequests />} />

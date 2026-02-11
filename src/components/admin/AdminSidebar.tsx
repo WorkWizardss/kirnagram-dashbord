@@ -37,11 +37,13 @@ export function AdminSidebar() {
     ...(agent && agent.permissions.prompts ? [{ title: "Approved Prompts", url: "/approved-prompts", icon: CheckCircle }] : []),
     ...(agent && agent.permissions.ads ? [{ title: "Ads", url: "/ads", icon: Megaphone }] : []),
     ...(agent && agent.permissions.currency ? [{ title: "Currency", url: "/currency", icon: Coins }] : []),
+    ...(agent && agent.permissions.currency ? [{ title: "Credits Settings", url: "/credits", icon: Coins }] : []),
     ...(agent && agent.permissions.aiCreatorRequests ? [{ title: "AI Creators", url: "/ai-creators", icon: Sparkles }] : []),
     ...(!agent ? [{ title: "Prompts", url: "/prompts", icon: FileText }] : []),
     ...(!agent ? [{ title: "Approved Prompts", url: "/approved-prompts", icon: CheckCircle }] : []),
     ...(!agent ? [{ title: "Ads", url: "/ads", icon: Megaphone }] : []),
     ...(!agent ? [{ title: "Currency", url: "/currency", icon: Coins }] : []),
+    ...(!agent ? [{ title: "Credits Settings", url: "/credits", icon: Coins }] : []),
     ...(!agent ? [{ title: "AI Creators", url: "/ai-creators", icon: Sparkles }] : []),
   ];
 
@@ -73,7 +75,7 @@ export function AdminSidebar() {
               collapsed ? "opacity-0 w-0" : "opacity-100"
             )}
           >
-            Kiranagram
+            kirnagram
           </span>
         </div>
       </div>
