@@ -33,24 +33,87 @@ interface MetricConfig {
   lineColor: string;
 }
 
-const metrics: MetricConfig[] = [
-  { id: "likes", title: "Likes", value: 128450, change: 12.5, icon: <Heart className="w-4 h-4" />, lineColor: "#f43f5e" },
-  { id: "comments", title: "Comments", value: 45230, change: 8.2, icon: <MessageCircle className="w-4 h-4" />, lineColor: "#8b5cf6" },
-  { id: "shares", title: "Shares", value: 28940, change: 15.3, icon: <Share2 className="w-4 h-4" />, lineColor: "#06b6d4" },
-  { id: "saves", title: "Saves", value: 67820, change: 9.8, icon: <Bookmark className="w-4 h-4" />, lineColor: "#10b981" },
-  { id: "uploads", title: "Uploads", value: 3240, change: 22.1, icon: <Upload className="w-4 h-4" />, lineColor: "#f97316" },
-  { id: "acceptedPrompts", title: "Accepted", value: 18650, change: 18.4, icon: <CheckCircle className="w-4 h-4" />, lineColor: "#22c55e" },
-  { id: "rejectedPrompts", title: "Rejected", value: 1890, change: -5.2, icon: <XCircle className="w-4 h-4" />, lineColor: "#ef4444" },
-  { id: "modifications", title: "Edits", value: 5420, change: 11.7, icon: <Edit className="w-4 h-4" />, lineColor: "#eab308" },
-  { id: "withdraws", title: "Withdrawals", value: "$38,450", change: 14.2, icon: <ArrowDownCircle className="w-4 h-4" />, lineColor: "#64748b" },
-  { id: "recharges", title: "Recharges", value: "$98,200", change: 25.8, icon: <ArrowUpCircle className="w-4 h-4" />, lineColor: "#14b8a6" },
-  { id: "images", title: "Images", value: 42350, change: 32.4, icon: <Image className="w-4 h-4" />, lineColor: "#6366f1" },
-  { id: "videos", title: "Videos", value: 8920, change: 45.6, icon: <Video className="w-4 h-4" />, lineColor: "#d946ef" },
-  { id: "newUsers", title: "New Users", value: 1350, change: 28.9, icon: <Users className="w-4 h-4" />, lineColor: "#3b82f6" },
+import { useEffect } from "react";
+// ...existing code...
+
+const metricIcons: Record<string, React.ReactNode> = {
+  likes: <Heart className="w-4 h-4" />,
+  comments: <MessageCircle className="w-4 h-4" />,
+  shares: <Share2 className="w-4 h-4" />,
+  posts: <Upload className="w-4 h-4" />,
+  editPrompts: <Edit className="w-4 h-4" />,
+  acceptedPrompts: <CheckCircle className="w-4 h-4" />,
+  rejectedPrompts: <XCircle className="w-4 h-4" />,
+  withdrawRequests: <ArrowDownCircle className="w-4 h-4" />,
+  totalUsers: <Users className="w-4 h-4" />,
+};
+
+const metricColors: Record<string, string> = {
+  likes: "#f43f5e",
+  comments: "#8b5cf6",
+  shares: "#06b6d4",
+  posts: "#f97316",
+  editPrompts: "#eab308",
+  acceptedPrompts: "#22c55e",
+  rejectedPrompts: "#ef4444",
+  withdrawRequests: "#64748b",
+  totalUsers: "#3b82f6",
+};
+
+const metricTitles: Record<string, string> = {
+  likes: "Likes",
+  comments: "Comments",
+  shares: "Shares",
+  posts: "Posts",
+  editPrompts: "Edit Prompts",
+  acceptedPrompts: "Accepted Prompts",
+  rejectedPrompts: "Rejected Prompts",
+  withdrawRequests: "Withdraw Requests",
+  totalUsers: "Total Users",
+};
+
+const metricOrder = [
+  "likes",
+  "comments",
+  "shares",
+  "posts",
+  "editPrompts",
+  "acceptedPrompts",
+  "rejectedPrompts",
+  "withdrawRequests",
+  "totalUsers",
 ];
 
 const Index = () => {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [metrics, setMetrics] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetch("/admin/dashboard/metrics")
+      .then((res) => res.json())
+      .then((data) => {
+        setMetrics({
+          likes: data.total_likes,
+          comments: data.total_comments,
+          shares: data.total_shares,
+          posts: data.total_posts,
+          editPrompts: data.edit_prompts,
+          acceptedPrompts: data.accepted_prompts,
+          rejectedPrompts: data.rejected_prompts,
+          withdrawRequests: data.withdraw_requests,
+          totalUsers: data.total_users,
+        });
+      });
+  }, []);
+
+const metricConfigs: MetricConfig[] = metricOrder.map((id) => ({
+  id,
+  title: metricTitles[id],
+  value: metrics[id] ?? 0,
+  change: 0, // You can update this if you have change data
+  icon: metricIcons[id],
+  lineColor: metricColors[id],
+}));
 
   const handleToggle = useCallback((id: string) => {
     setSelectedMetrics((prev) => {
@@ -68,12 +131,12 @@ const Index = () => {
   }, []);
 
   const selectedMetricConfigs = selectedMetrics.map((id) => {
-    const metric = metrics.find((m) => m.id === id)!;
+    const metric = metricConfigs.find((m) => m.id === id)!;
     return { id: metric.id, title: metric.title, color: metric.lineColor };
   });
 
   const selectedStats = selectedMetrics.map((id) => {
-    const metric = metrics.find((m) => m.id === id)!;
+    const metric = metricConfigs.find((m) => m.id === id)!;
     return { title: metric.title, value: metric.value, change: metric.change, color: metric.lineColor };
   });
 
@@ -94,7 +157,7 @@ const Index = () => {
         {/* Metric Chips */}
         <div className="glass-card rounded-xl p-4">
           <div className="flex flex-wrap gap-2">
-            {metrics.map((metric) => (
+            {metricConfigs.map((metric) => (
               <MetricChip
                 key={metric.id}
                 id={metric.id}
