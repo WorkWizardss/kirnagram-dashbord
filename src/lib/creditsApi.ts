@@ -8,7 +8,7 @@ export type CreditSettings = {
   daily_ad_enabled: boolean;
   daily_ad_credits: number;
   daily_ad_limit: number;
-  paid_plans: Array<{ id: string; name: string; credits: number }>;
+  paid_plans: Array<{ id: string; name: string; credits: number; price?: number; description?: string[] }>;
   burn_rates: {
     chatgpt: { low: number; medium: number; high: number };
     gemini: { fast: number; standard: number; ultra: number };

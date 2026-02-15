@@ -10,6 +10,8 @@ import { Coins, Sparkles, Zap, ShieldCheck } from "lucide-react";
 import { fetchCreditSettings, updateCreditSettings, CreditSettings } from "@/lib/creditsApi";
 import { toast } from "sonner";
 
+const formatAmount = (value: number) => `${value.toLocaleString()}`;
+
 const defaultSettings: CreditSettings = {
   welcome_bonus_enabled: true,
   welcome_bonus_credits: 10,
@@ -21,6 +23,8 @@ const defaultSettings: CreditSettings = {
     id: `plan_${index + 1}`,
     name: `Plan ${index + 1}`,
     credits: 0,
+    price: 0,
+    description: ["", "", "", ""],
   })),
   burn_rates: {
     chatgpt: { low: 2, medium: 4, high: 6 },
@@ -75,13 +79,21 @@ const CreditsSettings = () => {
     }
   };
 
-  const updatePaidPlan = (index: number, field: "name" | "credits", value: string) => {
+  const updatePaidPlan = (index: number, field: "name" | "credits" | "price" | "description", value: string, descIndex?: number) => {
     setSettings((prev) => {
       const nextPlans = [...prev.paid_plans];
-      const target = { ...nextPlans[index] };
+      const target = { ...nextPlans[index] } as any;
       if (field === "credits") {
-        target.credits = Number(value) || 0;
-      } else {
+        const n = Math.max(0, Number(value) || 0);
+        target.credits = n;
+      } else if (field === "price") {
+        const n = Math.max(0, Number(value) || 0);
+        target.price = n;
+      } else if (field === "description" && typeof descIndex === "number") {
+        const desc = Array.isArray(target.description) ? [...target.description] : ["", "", "", ""];
+        desc[descIndex] = value;
+        target.description = desc;
+      } else if (field === "name") {
         target.name = value;
       }
       nextPlans[index] = target;
@@ -302,23 +314,45 @@ const CreditsSettings = () => {
 
           <Separator />
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
             {paidPlans.map((plan, index) => (
-              <div key={plan.id} className="rounded-xl border border-border/70 p-4 bg-background/60">
+              <div key={plan.id} className="rounded-xl border border-border/70 p-4 bg-background/60 shadow-sm h-full ring-1 ring-white/5 hover:shadow-md overflow-hidden">
                 <div className="space-y-2">
                   <Label>Plan name</Label>
-                  <Input
-                    value={plan.name}
-                    onChange={(event) => updatePaidPlan(index, "name", event.target.value)}
-                  />
+                  <Input className="text-center" value={plan.name} onChange={(event) => updatePaidPlan(index, "name", event.target.value)} />
                 </div>
                 <div className="space-y-2 mt-3">
                   <Label>Credits</Label>
                   <Input
                     type="number"
+                    min={0}
+                    className="text-center"
                     value={plan.credits}
                     onChange={(event) => updatePaidPlan(index, "credits", event.target.value)}
                   />
+                </div>
+                <div className="space-y-2 mt-3">
+                  <Label>Price (INR)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    className="text-center"
+                    value={(plan as any).price ?? 0}
+                    onChange={(event) => updatePaidPlan(index, "price", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 mt-3">
+                  <Label>Description (4 points)</Label>
+                  <div className="grid gap-2">
+                    {Array.from({ length: 4 }).map((_, di) => (
+                      <Input
+                        key={di}
+                        value={((plan as any).description && (plan as any).description[di]) || ""}
+                        onChange={(event) => updatePaidPlan(index, "description", event.target.value, di)}
+                        placeholder={`Point ${di + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
