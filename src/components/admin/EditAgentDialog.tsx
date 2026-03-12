@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Eye, EyeOff, FileText, Megaphone, Coins, Users } from "lucide-react";
+import { Eye, EyeOff, FileText, Megaphone, Users } from "lucide-react";
 import type { Agent, AgentPermissions } from "@/types/agent";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: Ed
   const [permissions, setPermissions] = useState<AgentPermissions>({
     prompts: false,
     ads: false,
-    currency: false,
+    aiCreatorRequests: false,
   });
   const [isActive, setIsActive] = useState(true);
 
@@ -75,7 +75,6 @@ export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: Ed
   const permissionOptions = [
     { key: "prompts" as const, label: "Prompts Access", icon: FileText, description: "Can edit and manage prompts" },
     { key: "ads" as const, label: "Ads Access", icon: Megaphone, description: "Can edit and manage advertisements" },
-    { key: "currency" as const, label: "Currency Access", icon: Coins, description: "Can edit and manage currency settings" },
     { key: "aiCreatorRequests" as const, label: "AI Creator Requests", icon: Users, description: "Can review and manage AI creator requests" },
   ];
 

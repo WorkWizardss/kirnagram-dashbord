@@ -151,11 +151,11 @@ export function TimelineFilter({ onRangeChange }: TimelineFilterProps) {
               <Button
                 variant="outline"
                 className={cn(
-                  "h-9 justify-start text-left font-normal bg-muted/50 border-border hover:bg-muted",
-                  !customRange.from && "text-muted-foreground"
+                  "h-9 min-w-[148px] justify-start text-left font-medium bg-card/80 border-border/80 text-foreground shadow-sm hover:bg-card",
+                  !customRange.from && "text-foreground/65"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                 {customRange.from ? format(customRange.from, "MMM dd, yyyy") : "From"}
               </Button>
             </PopoverTrigger>
@@ -171,18 +171,18 @@ export function TimelineFilter({ onRangeChange }: TimelineFilterProps) {
             </PopoverContent>
           </Popover>
 
-          <span className="text-muted-foreground">to</span>
+          <span className="text-sm font-medium text-foreground/80">to</span>
 
           <Popover open={isToOpen} onOpenChange={setIsToOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "h-9 justify-start text-left font-normal bg-muted/50 border-border hover:bg-muted",
-                  !customRange.to && "text-muted-foreground"
+                  "h-9 min-w-[148px] justify-start text-left font-medium bg-card/80 border-border/80 text-foreground shadow-sm hover:bg-card",
+                  !customRange.to && "text-foreground/65"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                 {customRange.to ? format(customRange.to, "MMM dd, yyyy") : "To"}
               </Button>
             </PopoverTrigger>
@@ -202,7 +202,7 @@ export function TimelineFilter({ onRangeChange }: TimelineFilterProps) {
 
       {/* Active Range Display */}
       {selectedPreset !== "custom" && selectedPreset !== "live" && (
-        <span className="text-sm text-muted-foreground">
+        <span className="rounded-md bg-card/60 px-3 py-1.5 text-sm font-medium text-foreground/85 border border-border/60">
           {format(getDateRange(selectedPreset).from, "MMM dd")} - {format(getDateRange(selectedPreset).to, "MMM dd, yyyy")}
         </span>
       )}

@@ -12,6 +12,8 @@ export interface PromptRequest {
   title: string;
   promptDescription: string;
   aiModel?: string;
+  promptCategory?: string;
+  submittedBy?: string;
   tags: string[];
   submittedAt: Date;
   status: PromptStatus;
@@ -21,4 +23,6 @@ export interface PromptRequest {
   viewsCount?: number;
   commentsCount?: number;
   remixesCount?: number;
+  payoutPerRemix?: number;
+  totalEarnings?: number;
 }

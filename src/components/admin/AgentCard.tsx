@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, MoreVertical, Trash2, Edit, Eye, EyeOff, FileText, Megaphone, Coins } from "lucide-react";
+import { User, MoreVertical, Trash2, Edit, Eye, EyeOff, FileText, Megaphone, Users } from "lucide-react";
 import type { Agent } from "@/types/agent";
 
 interface AgentCardProps {
@@ -25,7 +25,12 @@ export function AgentCard({ agent, onToggleActive, onDelete, onEdit }: AgentCard
   const permissionBadges = [
     { key: "prompts" as const, label: "Prompts", icon: FileText, color: "bg-violet-500/20 text-violet-400" },
     { key: "ads" as const, label: "Ads", icon: Megaphone, color: "bg-orange-500/20 text-orange-400" },
-    { key: "currency" as const, label: "Currency", icon: Coins, color: "bg-emerald-500/20 text-emerald-400" },
+    {
+      key: "aiCreatorRequests" as const,
+      label: "AI Creators",
+      icon: Users,
+      color: "bg-emerald-500/20 text-emerald-400",
+    },
   ];
 
   const activePermissions = permissionBadges.filter((p) => agent.permissions[p.key]);

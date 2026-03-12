@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,26 +9,33 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  KeyRound,
   LogOut,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { clearAdminAuthenticated } from "@/lib/adminAuth";
+import {
+  changeAdminPassword,
+  clearAdminAuthenticated,
+  getAuthenticatedAdminRole,
+} from "@/lib/adminAuth";
 import { clearAgentAuthenticated, getAuthenticatedAgent } from "@/lib/agentAuth";
-
-const menuItems = [
-  { title: "Main", url: "/", icon: LayoutDashboard },
-  { title: "Agents", url: "/agents", icon: Bot },
-  { title: "Prompts", url: "/prompts", icon: FileText },
-  { title: "Ads", url: "/ads", icon: Megaphone },
-  { title: "Currency", url: "/currency", icon: Coins },
-];
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const agent = getAuthenticatedAgent();
+  const adminRole = getAuthenticatedAdminRole();
 
   const menuItems = [
     { title: "Main", url: "/", icon: LayoutDashboard },
@@ -36,13 +43,11 @@ export function AdminSidebar() {
     ...(agent && agent.permissions.prompts ? [{ title: "Prompts", url: "/prompts", icon: FileText }] : []),
     ...(agent && agent.permissions.prompts ? [{ title: "Approved Prompts", url: "/approved-prompts", icon: CheckCircle }] : []),
     ...(agent && agent.permissions.ads ? [{ title: "Ads", url: "/ads", icon: Megaphone }] : []),
-    ...(agent && agent.permissions.currency ? [{ title: "Currency", url: "/currency", icon: Coins }] : []),
-    ...(agent && agent.permissions.currency ? [{ title: "Credits Settings", url: "/credits", icon: Coins }] : []),
     ...(agent && agent.permissions.aiCreatorRequests ? [{ title: "AI Creators", url: "/ai-creators", icon: Sparkles }] : []),
     ...(!agent ? [{ title: "Prompts", url: "/prompts", icon: FileText }] : []),
     ...(!agent ? [{ title: "Approved Prompts", url: "/approved-prompts", icon: CheckCircle }] : []),
     ...(!agent ? [{ title: "Ads", url: "/ads", icon: Megaphone }] : []),
-    ...(!agent ? [{ title: "Currency", url: "/currency", icon: Coins }] : []),
+    ...(!agent ? [{ title: "Withdraw", url: "/currency", icon: Coins }] : []),
     ...(!agent ? [{ title: "Credits Settings", url: "/credits", icon: Coins }] : []),
     ...(!agent ? [{ title: "AI Creators", url: "/ai-creators", icon: Sparkles }] : []),
   ];
@@ -56,6 +61,38 @@ export function AdminSidebar() {
     navigate("/login", { replace: true });
   };
 
+  const handlePasswordUpdate = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPasswordError(null);
+
+    if (!adminRole) {
+      setPasswordError("Only admins can change password.");
+      return;
+    }
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      setPasswordError("Please fill all password fields.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("New password and confirm password must match.");
+      return;
+    }
+
+    const result = changeAdminPassword(adminRole, oldPassword, newPassword);
+    if (!result.success) {
+      setPasswordError(result.message || "Unable to change password.");
+      return;
+    }
+
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setIsPasswordDialogOpen(false);
+    toast.success("Password changed successfully.");
+  };
+
   return (
     <aside
       className={cn(
@@ -64,20 +101,15 @@ export function AdminSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">K</span>
-          </div>
-          <span
-            className={cn(
-              "font-display font-bold text-sidebar-accent-foreground text-lg whitespace-nowrap transition-all duration-300",
-              collapsed ? "opacity-0 w-0" : "opacity-100"
-            )}
-          >
-            kirnagram
-          </span>
-        </div>
+      <div className="h-28 flex items-center px-4">
+        <img 
+          src="/kirnagram-logo.png" 
+          alt="Kirnagram Logo" 
+          className={cn(
+            "h-full object-contain transition-all duration-300",
+            collapsed ? "opacity-50" : "opacity-100"
+          )}
+        />
       </div>
 
       {/* Navigation */}
@@ -124,6 +156,31 @@ export function AdminSidebar() {
 
       {/* Footer Actions */}
       <div className="p-3 border-t border-sidebar-border space-y-2">
+        {!agent && (
+          <button
+            onClick={() => {
+              setPasswordError(null);
+              setIsPasswordDialogOpen(true);
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors group"
+          >
+            <KeyRound className="w-5 h-5 text-sidebar-muted group-hover:text-primary" />
+            <span
+              className={cn(
+                "text-sm font-medium whitespace-nowrap transition-all duration-300",
+                collapsed ? "opacity-0 w-0" : "opacity-100",
+              )}
+            >
+              Change Password
+            </span>
+            {collapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                Change Password
+              </div>
+            )}
+          </button>
+        )}
+
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors group"
@@ -158,6 +215,50 @@ export function AdminSidebar() {
           )}
         </button>
       </div>
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Change Admin Password</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handlePasswordUpdate} className="space-y-3">
+            <Input
+              type="password"
+              placeholder="Old password"
+              value={oldPassword}
+              onChange={(event) => setOldPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <Input
+              type="password"
+              placeholder="New password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmNewPassword}
+              onChange={(event) => setConfirmNewPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Update Password</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </aside>
   );
 }

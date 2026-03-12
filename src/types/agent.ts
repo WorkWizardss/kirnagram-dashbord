@@ -5,8 +5,7 @@ export interface Agent {
   permissions: {
     prompts: boolean;
     ads: boolean;
-    currency: boolean;
-    // Optionally add aiCreatorRequests if needed
+    aiCreatorRequests: boolean;
   };
   createdAt: Date;
   isActive: boolean;
@@ -14,11 +13,5 @@ export interface Agent {
 export interface AgentPermissions {
   prompts: boolean;
   ads: boolean;
-  currency: boolean;
   aiCreatorRequests: boolean;
-  username: string;
-  password: string;
-  permissions: AgentPermissions;
-  createdAt: Date;
-  isActive: boolean;
 }

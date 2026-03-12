@@ -11,6 +11,11 @@ const parseAgents = (raw: string | null, fallback: Agent[]) => {
     const parsed = JSON.parse(raw) as Array<Omit<Agent, "createdAt"> & { createdAt: string }>;
     return parsed.map((agent) => ({
       ...agent,
+      permissions: {
+        prompts: Boolean(agent.permissions?.prompts),
+        ads: Boolean(agent.permissions?.ads),
+        aiCreatorRequests: Boolean(agent.permissions?.aiCreatorRequests),
+      },
       createdAt: new Date(agent.createdAt),
     }));
   } catch {

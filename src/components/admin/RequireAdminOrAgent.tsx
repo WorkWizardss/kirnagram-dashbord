@@ -4,7 +4,7 @@ import { getAuthenticatedAgent } from "@/lib/agentAuth";
 
 interface RequireAdminProps {
   type: "admin" | "agent";
-  requiredPermission?: "prompts" | "ads" | "currency";
+  requiredPermission?: "prompts" | "ads" | "aiCreatorRequests";
 }
 
 const RequireAdminOrAgent = ({ type, requiredPermission }: RequireAdminProps) => {

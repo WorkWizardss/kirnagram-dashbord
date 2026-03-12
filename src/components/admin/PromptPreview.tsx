@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { 
   CheckCircle, 
   XCircle, 
@@ -12,19 +13,29 @@ import {
   Calendar, 
   Tag, 
   Palette,
-  FileText
+  FileText,
+  IndianRupee
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface PromptPreviewProps {
   request: PromptRequest | null;
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
   onModify: (id: string) => void;
+  onUpdatePayout?: (id: string, payoutPerRemix: number) => void;
+  updatingPayout?: boolean;
 }
 
-export function PromptPreview({ request, onAccept, onReject, onModify }: PromptPreviewProps) {
+export function PromptPreview({ request, onAccept, onReject, onModify, onUpdatePayout, updatingPayout = false }: PromptPreviewProps) {
+  const [payoutInput, setPayoutInput] = useState(1);
+
+  useEffect(() => {
+    setPayoutInput(request?.payoutPerRemix ?? 1);
+  }, [request?.id, request?.payoutPerRemix]);
+
   if (!request) {
     return (
       <div className="h-full flex items-center justify-center bg-background/50">
@@ -37,6 +48,8 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
   }
 
   const isActionable = request.status === "pending" || request.status === "modify";
+  const currentPayout = request.payoutPerRemix ?? 1;
+  const estimatedEarnings = (request.remixesCount ?? 0) * currentPayout;
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -52,11 +65,18 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
                 <User className="w-4 h-4" />
                 {request.creatorName || request.creatorUsername || "Creator"}
               </span>
+              <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                <IndianRupee className="h-3 w-3" />
+                Rs {currentPayout}/remix
+              </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
                 {format(request.submittedAt, "MMM d, yyyy 'at' h:mm a")}
               </span>
             </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Total earning: Rs {estimatedEarnings}
+            </p>
             <div className="mt-2 text-xs text-muted-foreground">
               {request.creatorEmail && <span>Email: {request.creatorEmail}</span>}
               {request.creatorMobile && <span className="ml-3">Mobile: {request.creatorMobile}</span>}
@@ -168,6 +188,43 @@ export function PromptPreview({ request, onAccept, onReject, onModify }: PromptP
               ))}
             </div>
           )}
+
+          <Card className="bg-card/50 border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                <IndianRupee className="w-4 h-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Remix Payout</span>
+              </div>
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Current payout</p>
+                  <p className="text-xl font-semibold text-foreground">Rs {currentPayout} / remix</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Estimated total earnings: Rs {estimatedEarnings}
+                  </p>
+                </div>
+                {request.status === "approved" && onUpdatePayout && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      value={payoutInput}
+                      onChange={(event) => setPayoutInput(Number(event.target.value) || 0)}
+                      className="w-28"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={updatingPayout || payoutInput === currentPayout}
+                      onClick={() => onUpdatePayout(request.id, payoutInput)}
+                    >
+                      {updatingPayout ? "Saving..." : "Update"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Tags */}
           <Card className="bg-card/50 border-border">

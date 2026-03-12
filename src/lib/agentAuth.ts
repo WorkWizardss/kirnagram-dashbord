@@ -10,7 +10,7 @@ export interface AgentAuthInfo {
   permissions: {
     prompts: boolean;
     ads: boolean;
-    currency: boolean;
+    aiCreatorRequests: boolean;
   };
 }
 

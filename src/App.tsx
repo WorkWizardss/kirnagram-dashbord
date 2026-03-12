@@ -39,11 +39,11 @@ const App = () => (
               <Route element={<RequireAdminOrAgent type="agent" requiredPermission="ads" />}>
                 <Route path="/ads" element={<Ads />} />
               </Route>
-              <Route element={<RequireAdminOrAgent type="agent" requiredPermission="currency" />}>
+              <Route element={<RequireAdminOrAgent type="admin" />}>
                 <Route path="/currency" element={<Currency />} />
                 <Route path="/credits" element={<CreditsSettings />} />
               </Route>
-              <Route element={<RequireAdminOrAgent type="agent" />}>
+              <Route element={<RequireAdminOrAgent type="agent" requiredPermission="aiCreatorRequests" />}>
                 <Route path="/ai-creators" element={<AICreatorRequests />} />
               </Route>
             </Route>

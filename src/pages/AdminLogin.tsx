@@ -2,12 +2,15 @@ import { FormEvent, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateAdminCredentials, isAdminAuthenticated, setAdminAuthenticated } from "@/lib/adminAuth";
+import {
+  isAdminAuthenticated,
+  setAdminAuthenticated,
+  validateAdminCredentials,
+} from "@/lib/adminAuth";
 import {
   validateAgentCredentials,
   isAgentAuthenticated,
   setAgentAuthenticated,
-  getAuthenticatedAgent,
 } from "@/lib/agentAuth";
 import { toast } from "sonner";
 
@@ -20,13 +23,11 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   if (isAdminAuthenticated()) {
-    navigate("/", { replace: true });
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   if (isAgentAuthenticated()) {
-    navigate("/", { replace: true });
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   const redirectPath = useMemo(() => {
@@ -40,8 +41,9 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     // Try admin login first
-    if (validateAdminCredentials(email, password)) {
-      setAdminAuthenticated(true);
+    const adminRole = validateAdminCredentials(email, password);
+    if (adminRole) {
+      setAdminAuthenticated(adminRole);
       setIsLoading(false);
       navigate(redirectPath, { replace: true });
       return;
@@ -66,15 +68,15 @@ const AdminLogin = () => {
       <div className="w-full max-w-md glass-card rounded-2xl p-8 shadow-lg">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-display font-bold">Dashboard Login</h1>
-          <p className="text-sm text-muted-foreground mt-2">Sign in with admin or agent credentials.</p>
+          <p className="text-sm text-muted-foreground mt-2">Sign in to continue.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
+            <label className="text-sm font-medium">Email / Username</label>
             <Input
-              type="email"
-              placeholder="admin@kirnagrma or agent email"
+              type="text"
+              placeholder="Enter username or email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required

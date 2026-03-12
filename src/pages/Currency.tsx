@@ -9,7 +9,7 @@ const API_BASE = "http://127.0.0.1:8000";
 
 const Currency = () => {
   const { toast } = useToast();
-  const [minWithdraw, setMinWithdraw] = useState(20);
+  const [minWithdraw, setMinWithdraw] = useState(100);
   const [saving, setSaving] = useState(false);
   const [withdrawRequests, setWithdrawRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -19,12 +19,12 @@ const Currency = () => {
   // =========================
   const fetchSetting = async () => {
     try {
-      const res = await fetch(`${API_BASE}/withdraw/min-withdraw`);
+      const res = await fetch(`${API_BASE}/admin/withdraw/settings`);
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Failed to fetch");
 
-      setMinWithdraw(data.minWithdrawAmount || 20);
+      setMinWithdraw(data.min_withdraw_amount || 100);
     } catch (err: any) {
       toast({
         title: "Error",
@@ -33,10 +33,6 @@ const Currency = () => {
       });
     }
   };
-
-  useEffect(() => {
-    fetchSetting();
-  }, []);
 
   // Fetch all withdrawal requests and creator stats
   const fetchWithdrawRequests = async () => {
@@ -95,6 +91,7 @@ const Currency = () => {
         title: "Success",
         description: "Minimum withdraw updated successfully",
       });
+      fetchWithdrawRequests();
 
     } catch (err: any) {
       toast({
@@ -107,12 +104,68 @@ const Currency = () => {
     }
   };
 
+  const handleApprove = async (req: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/admin/withdraw/requests/${req._id}/approve`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to approve request");
+
+      toast({ title: "Approved", description: `Withdrawal approved for ${req.user_id}` });
+      fetchWithdrawRequests();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleReject = async (req: any) => {
+    try {
+      const reason = window.prompt("Rejection reason (optional)") || "";
+      const url = reason
+        ? `${API_BASE}/admin/withdraw/requests/${req._id}/reject?reason=${encodeURIComponent(reason)}`
+        : `${API_BASE}/admin/withdraw/requests/${req._id}/reject`;
+
+      const res = await fetch(url, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to reject request");
+
+      toast({ title: "Rejected", description: `Withdrawal rejected for ${req.user_id}` });
+      fetchWithdrawRequests();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="p-8">
-        {/* Minimum Withdraw Setting section removed as requested */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Minimum Withdraw Amount</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <input
+                type="number"
+                min={1}
+                value={minWithdraw}
+                onChange={(event) => setMinWithdraw(Number(event.target.value) || 0)}
+                className="w-full sm:w-48 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+              <Button onClick={handleUpdate} disabled={saving || minWithdraw <= 0}>
+                {saving ? "Saving..." : "Update"}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              This value applies to all users. Example: 100, 200, 500.
+            </p>
+          </CardContent>
+        </Card>
+
         <div className="bg-muted/30 p-6 rounded-xl">
           <h2 className="text-xl font-semibold mb-4">Withdrawal Requests & Creator Stats</h2>
+          <p className="text-sm text-muted-foreground mb-4">Current minimum withdraw: ₹{minWithdraw}</p>
           {loading ? (
             <div>Loading...</div>
           ) : withdrawRequests.length === 0 ? (
@@ -122,11 +175,34 @@ const Currency = () => {
               {withdrawRequests.map((req, i) => (
                 <Card key={req._id || i}>
                   <CardHeader>
-                    <CardTitle>₹{req.amount} - {req.status === "approved" ? <Badge variant="default">Approved</Badge> : req.status === "rejected" ? <Badge variant="destructive">Rejected</Badge> : <Badge variant="secondary">Pending</Badge>}</CardTitle>
+                    <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+                      <span>₹{req.amount}</span>
+                      {req.status === "approved" ? <Badge variant="default">Approved</Badge> : req.status === "rejected" ? <Badge variant="destructive">Rejected</Badge> : <Badge variant="secondary">Pending</Badge>}
+                    </CardTitle>
+                    {req.full_name && (
+                      <p className="text-sm font-medium text-muted-foreground mt-1">{req.full_name}{req.username ? ` · @${req.username}` : ""}</p>
+                    )}
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-2 text-sm"><b>User ID:</b> {req.user_id}</div>
+                    {/* Creator Profile Details */}
+                    {req.full_name && (
+                      <div className="mb-2 text-sm"><b>Name:</b> {req.full_name}</div>
+                    )}
+                    {req.username && (
+                      <div className="mb-2 text-sm"><b>Username:</b> @{req.username}</div>
+                    )}
+                    {req.email && (
+                      <div className="mb-2 text-sm"><b>Email:</b> {req.email}</div>
+                    )}
+                    {req.mobile && (
+                      <div className="mb-2 text-sm"><b>Mobile:</b> {req.mobile}</div>
+                    )}
+                    {req.gender && (
+                      <div className="mb-2 text-sm capitalize"><b>Gender:</b> {req.gender}</div>
+                    )}
+                    <hr className="my-3 border-border" />
                     <div className="mb-2 text-sm"><b>UPI ID:</b> {req.upi_id}</div>
+                    <div className="mb-2 text-sm"><b>Applied Minimum:</b> ₹{req.min_withdraw_amount ?? minWithdraw}</div>
                     <div className="mb-2 text-sm"><b>Total Prompts:</b> {req.total_prompts}</div>
                     <div className="mb-2 text-sm"><b>Remixes:</b> {req.total_remixes}</div>
                     <div className="mb-2 text-sm"><b>Likes:</b> {req.total_likes}</div>
@@ -153,20 +229,6 @@ const Currency = () => {
       </div>
     </AdminLayout>
   );
-};
-
-// Approve handler
-const handleApprove = async (req: any) => {
-  // TODO: Call backend to approve, then send notification
-  // You may want to move toast and fetchWithdrawRequests into props or context if needed
-  // For now, this is a placeholder
-  alert(`Approved withdraw for ${req.user_id}`);
-};
-
-// Reject handler
-const handleReject = async (req: any) => {
-  // TODO: Call backend to reject, then send notification
-  alert(`Rejected withdraw for ${req.user_id}`);
 };
 
 export default Currency;

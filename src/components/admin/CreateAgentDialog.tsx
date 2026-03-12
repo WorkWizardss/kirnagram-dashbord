@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Eye, EyeOff, FileText, Megaphone, Coins, Users } from "lucide-react";
+import { Eye, EyeOff, FileText, Megaphone, Users } from "lucide-react";
 import type { Agent, AgentPermissions } from "@/types/agent";
 import { toast } from "sonner";
 
@@ -28,7 +28,6 @@ export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateA
   const [permissions, setPermissions] = useState<AgentPermissions>({
     prompts: false,
     ads: false,
-    currency: false,
     aiCreatorRequests: false,
   });
 
@@ -55,7 +54,7 @@ export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateA
     // Reset form
     setUsername("");
     setPassword("");
-    setPermissions({ prompts: false, ads: false, currency: false, aiCreatorRequests: false });
+    setPermissions({ prompts: false, ads: false, aiCreatorRequests: false });
     onOpenChange(false);
     toast.success("Agent created successfully");
   };
@@ -63,7 +62,6 @@ export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateA
   const permissionOptions = [
     { key: "prompts" as const, label: "Prompts Access", icon: FileText, description: "Can edit and manage prompts" },
     { key: "ads" as const, label: "Ads Access", icon: Megaphone, description: "Can edit and manage advertisements" },
-    { key: "currency" as const, label: "Currency Access", icon: Coins, description: "Can edit and manage currency settings" },
     { key: "aiCreatorRequests" as const, label: "AI Creator Requests", icon: Users, description: "Can review and manage AI creator requests" },
   ];
 

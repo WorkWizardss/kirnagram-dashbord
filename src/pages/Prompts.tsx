@@ -45,6 +45,8 @@ const Prompts = () => {
           viewsCount: Array.isArray(p.views) ? p.views.length : p.views_count || 0,
           commentsCount: Array.isArray(p.comments) ? p.comments.length : p.comments_count || 0,
           remixesCount: Array.isArray(p.remixes) ? p.remixes.length : p.remixes_count || 0,
+          payoutPerRemix: Number(p.payout_per_remix ?? 1),
+          totalEarnings: (Array.isArray(p.remixes) ? p.remixes.length : p.remixes_count || 0) * Number(p.payout_per_remix ?? 1),
         }));
         setRequests(mapped);
       } catch (e: any) {
