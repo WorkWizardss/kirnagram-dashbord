@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   isAdminAuthenticated,
   setAdminAuthenticated,
-  validateAdminCredentials,
+  loginAdmin,
 } from "@/lib/adminAuth";
 import {
   validateAgentCredentials,
@@ -35,32 +35,41 @@ const AdminLogin = () => {
     return state?.from?.pathname || "/";
   }, [location.state]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    // Try admin login first
-    const adminRole = validateAdminCredentials(email, password);
-    if (adminRole) {
-      setAdminAuthenticated(adminRole);
-      setIsLoading(false);
-      navigate(redirectPath, { replace: true });
-      return;
-    }
+    try {
+      // 1. Try admin login (superadmin hardcoded + Firebase Auth)
+      const adminRole = await loginAdmin(email, password);
+      if (adminRole) {
+        setAdminAuthenticated(adminRole);
+        setIsLoading(false);
+        navigate(redirectPath, { replace: true });
+        return;
+      }
 
-    // Try agent login
-    const agent = validateAgentCredentials(email, password);
-    if (agent) {
-      setAgentAuthenticated(agent.id);
-      toast.success(`Welcome, ${agent.username}!`);
-      setIsLoading(false);
-      navigate(redirectPath, { replace: true });
-      return;
-    }
+      // 2. Try agent login (validated against Firestore)
+      const agent = await validateAgentCredentials(email, password);
+      if (agent) {
+        setAgentAuthenticated(agent.id, {
+          id: agent.id,
+          username: agent.username,
+          permissions: agent.permissions,
+        });
+        toast.success(`Welcome, ${agent.username}!`);
+        setIsLoading(false);
+        navigate(redirectPath, { replace: true });
+        return;
+      }
 
-    setError("Invalid email or password.");
-    setIsLoading(false);
+      setError("Invalid email or password.");
+    } catch {
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

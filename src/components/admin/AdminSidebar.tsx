@@ -61,7 +61,7 @@ export function AdminSidebar() {
     navigate("/login", { replace: true });
   };
 
-  const handlePasswordUpdate = (event: FormEvent<HTMLFormElement>) => {
+  const handlePasswordUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPasswordError(null);
 
@@ -80,7 +80,7 @@ export function AdminSidebar() {
       return;
     }
 
-    const result = changeAdminPassword(adminRole, oldPassword, newPassword);
+    const result = await changeAdminPassword(oldPassword, newPassword);
     if (!result.success) {
       setPasswordError(result.message || "Unable to change password.");
       return;
@@ -96,20 +96,13 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300",
+        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300 shadow-xl shadow-black/10",
         collapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo */}
       <div className="h-28 flex items-center px-4">
-        <img 
-          src="/kirnagram-logo.png" 
-          alt="Kirnagram Logo" 
-          className={cn(
-            "h-full object-contain transition-all duration-300",
-            collapsed ? "opacity-50" : "opacity-100"
-          )}
-        />
+        <p>Kirnagram</p>
       </div>
 
       {/* Navigation */}
@@ -124,7 +117,7 @@ export function AdminSidebar() {
                   className={cn(
                     "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      ? "bg-primary/20 text-sidebar-accent-foreground ring-1 ring-primary/40"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
                   )}
                 >
@@ -203,7 +196,7 @@ export function AdminSidebar() {
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-muted hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors border border-sidebar-border/70"
         >
           {collapsed ? (
             <ChevronRight className="w-5 h-5" />

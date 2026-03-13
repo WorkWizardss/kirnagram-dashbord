@@ -24,33 +24,31 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="dark">
-          <Routes>
-            <Route path="/login" element={<AdminLogin />} />
-            <Route element={<RequireAdmin />}>
-              <Route path="/" element={<Index />} />
-              <Route element={<RequireAdminOrAgent type="admin" />}>
-                <Route path="/agents" element={<Agents />} />
-              </Route>
-              <Route element={<RequireAdminOrAgent type="agent" requiredPermission="prompts" />}>
-                <Route path="/prompts" element={<Prompts />} />
-                <Route path="/approved-prompts" element={<ApprovedPrompts />} />
-              </Route>
-              <Route element={<RequireAdminOrAgent type="agent" requiredPermission="ads" />}>
-                <Route path="/ads" element={<Ads />} />
-              </Route>
-              <Route element={<RequireAdminOrAgent type="admin" />}>
-                <Route path="/currency" element={<Currency />} />
-                <Route path="/credits" element={<CreditsSettings />} />
-              </Route>
-              <Route element={<RequireAdminOrAgent type="agent" requiredPermission="aiCreatorRequests" />}>
-                <Route path="/ai-creators" element={<AICreatorRequests />} />
-              </Route>
+        <Routes>
+          <Route path="/login" element={<AdminLogin />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/" element={<Index />} />
+            <Route element={<RequireAdminOrAgent type="admin" />}>
+              <Route path="/agents" element={<Agents />} />
             </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
+            <Route element={<RequireAdminOrAgent type="agent" requiredPermission="prompts" />}>
+              <Route path="/prompts" element={<Prompts />} />
+              <Route path="/approved-prompts" element={<ApprovedPrompts />} />
+            </Route>
+            <Route element={<RequireAdminOrAgent type="agent" requiredPermission="ads" />}>
+              <Route path="/ads" element={<Ads />} />
+            </Route>
+            <Route element={<RequireAdminOrAgent type="admin" />}>
+              <Route path="/currency" element={<Currency />} />
+              <Route path="/credits" element={<CreditsSettings />} />
+            </Route>
+            <Route element={<RequireAdminOrAgent type="agent" requiredPermission="aiCreatorRequests" />}>
+              <Route path="/ai-creators" element={<AICreatorRequests />} />
+            </Route>
+          </Route>
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

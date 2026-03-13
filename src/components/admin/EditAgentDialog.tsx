@@ -19,13 +19,14 @@ interface EditAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agent: Agent | null;
-  onUpdateAgent: (agent: Agent) => void;
+  onUpdateAgent: (agent: Agent) => Promise<void>;
 }
 
 export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: EditAgentDialogProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [permissions, setPermissions] = useState<AgentPermissions>({
     prompts: false,
     ads: false,
@@ -43,12 +44,10 @@ export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: Ed
     setIsActive(agent.isActive);
   }, [agent]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!agent) {
-      return;
-    }
+    if (!agent) return;
 
     if (!username.trim() || !password.trim()) {
       toast.error("Email and password are required");
@@ -60,16 +59,20 @@ export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: Ed
       return;
     }
 
-    onUpdateAgent({
-      ...agent,
-      username: username.trim(),
-      password: password.trim(),
-      permissions,
-      isActive,
-    });
-
-    onOpenChange(false);
-    toast.success("Agent updated successfully");
+    setIsSubmitting(true);
+    try {
+      await onUpdateAgent({
+        ...agent,
+        username: username.trim(),
+        password: password.trim(),
+        permissions,
+        isActive,
+      });
+      onOpenChange(false);
+      toast.success("Agent updated successfully");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const permissionOptions = [
@@ -159,10 +162,12 @@ export function EditAgentDialog({ open, onOpenChange, agent, onUpdateAgent }: Ed
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

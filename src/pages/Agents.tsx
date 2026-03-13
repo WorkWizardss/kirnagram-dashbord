@@ -6,51 +6,30 @@ import { AgentCard } from "@/components/admin/AgentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Users } from "lucide-react";
-// Make sure Agent is exported from "@/types/agent"
 import type { Agent } from "@/types/agent";
-// If Agent is the default export, use:
-// import Agent from "@/types/agent";
-import { loadAgents, saveAgents } from "@/lib/agentStore";
+import {
+  loadAgentsFromFirestore,
+  createAgentInFirestore,
+  updateAgentInFirestore,
+  deleteAgentFromFirestore,
+} from "@/lib/agentStore";
 import { toast } from "sonner";
 
-// Mock initial data
-const initialAgents: Agent[] = [
-  {
-    id: "1",
-    username: "agent_john",
-    password: "secure123",
-    permissions: { prompts: true, ads: false, aiCreatorRequests: false },
-    createdAt: new Date("2024-01-15"),
-    isActive: true,
-  },
-  {
-    id: "2",
-    username: "agent_sarah",
-    password: "pass456!",
-    permissions: { prompts: true, ads: true, aiCreatorRequests: true },
-    createdAt: new Date("2024-02-20"),
-    isActive: true,
-  },
-  {
-    id: "3",
-    username: "agent_mike",
-    password: "mikeP@ss",
-    permissions: { prompts: false, ads: false, aiCreatorRequests: true },
-    createdAt: new Date("2024-03-10"),
-    isActive: false,
-  },
-];
-
 const Agents = () => {
-  const [agents, setAgents] = useState<Agent[]>(() => loadAgents(initialAgents));
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
+  // Load agents from Firestore on mount
   useEffect(() => {
-    saveAgents(agents);
-  }, [agents]);
+    loadAgentsFromFirestore()
+      .then(setAgents)
+      .catch(() => toast.error("Failed to load agents"))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredAgents = useMemo(
     () =>
@@ -60,25 +39,36 @@ const Agents = () => {
     [agents, searchQuery],
   );
 
-  const handleCreateAgent = (newAgent: Omit<Agent, "id" | "createdAt">) => {
-    const agent: Agent = {
-      ...newAgent,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
-    setAgents((prev) => [agent, ...prev]);
+  const handleCreateAgent = async (newAgent: Omit<Agent, "id" | "createdAt">) => {
+    try {
+      const agent = await createAgentInFirestore(newAgent);
+      setAgents((prev) => [agent, ...prev]);
+    } catch {
+      toast.error("Failed to create agent. Please try again.");
+    }
   };
 
-  const handleToggleActive = (id: string, isActive: boolean) => {
-    setAgents((prev) =>
-      prev.map((agent) => (agent.id === id ? { ...agent, isActive } : agent))
-    );
-    toast.success(isActive ? "Agent activated" : "Agent deactivated");
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    const agent = agents.find((a) => a.id === id);
+    if (!agent) return;
+    try {
+      const updated = { ...agent, isActive };
+      await updateAgentInFirestore(updated);
+      setAgents((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      toast.success(isActive ? "Agent activated" : "Agent deactivated");
+    } catch {
+      toast.error("Failed to update agent status.");
+    }
   };
 
-  const handleDeleteAgent = (id: string) => {
-    setAgents((prev) => prev.filter((agent) => agent.id !== id));
-    toast.success("Agent deleted");
+  const handleDeleteAgent = async (id: string) => {
+    try {
+      await deleteAgentFromFirestore(id);
+      setAgents((prev) => prev.filter((agent) => agent.id !== id));
+      toast.success("Agent deleted");
+    } catch {
+      toast.error("Failed to delete agent. Please try again.");
+    }
   };
 
   const handleEditAgent = (agent: Agent) => {
@@ -86,8 +76,13 @@ const Agents = () => {
     setIsEditOpen(true);
   };
 
-  const handleUpdateAgent = (updatedAgent: Agent) => {
-    setAgents((prev) => prev.map((agent) => (agent.id === updatedAgent.id ? updatedAgent : agent)));
+  const handleUpdateAgent = async (updatedAgent: Agent) => {
+    try {
+      await updateAgentInFirestore(updatedAgent);
+      setAgents((prev) => prev.map((agent) => (agent.id === updatedAgent.id ? updatedAgent : agent)));
+    } catch {
+      toast.error("Failed to update agent. Please try again.");
+    }
   };
 
   return (
@@ -119,7 +114,11 @@ const Agents = () => {
         </div>
 
         {/* Agents Grid */}
-        {filteredAgents.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-muted-foreground text-sm">Loading agents...</p>
+          </div>
+        ) : filteredAgents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredAgents.map((agent) => (
               <AgentCard

@@ -18,20 +18,21 @@ import { toast } from "sonner";
 interface CreateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateAgent: (agent: Omit<Agent, "id" | "createdAt">) => void;
+  onCreateAgent: (agent: Omit<Agent, "id" | "createdAt">) => Promise<void>;
 }
 
 export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateAgentDialogProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [permissions, setPermissions] = useState<AgentPermissions>({
     prompts: false,
     ads: false,
     aiCreatorRequests: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
@@ -44,19 +45,23 @@ export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateA
       return;
     }
 
-    onCreateAgent({
-      username: username.trim(),
-      password: password.trim(),
-      permissions,
-      isActive: true,
-    });
-
-    // Reset form
-    setUsername("");
-    setPassword("");
-    setPermissions({ prompts: false, ads: false, aiCreatorRequests: false });
-    onOpenChange(false);
-    toast.success("Agent created successfully");
+    setIsSubmitting(true);
+    try {
+      await onCreateAgent({
+        username: username.trim(),
+        password: password.trim(),
+        permissions,
+        isActive: true,
+      });
+      // Reset form
+      setUsername("");
+      setPassword("");
+      setPermissions({ prompts: false, ads: false, aiCreatorRequests: false });
+      onOpenChange(false);
+      toast.success("Agent created successfully");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const permissionOptions = [
@@ -145,10 +150,12 @@ export function CreateAgentDialog({ open, onOpenChange, onCreateAgent }: CreateA
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Create Agent</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Agent"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
