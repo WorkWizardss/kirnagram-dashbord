@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Coins, Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { Coins, Sparkles, ShieldCheck } from "lucide-react";
 import { fetchCreditSettings, updateCreditSettings, CreditSettings } from "@/lib/creditsApi";
 import { toast } from "sonner";
 
@@ -108,7 +108,7 @@ const CreditsSettings = () => {
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Credits Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Control free credits, paid plans, and AI burn rates.
+              Control free credits and paid plans.
             </p>
           </div>
           <Button onClick={handleSave} disabled={saving || loading}>
@@ -211,97 +211,6 @@ const CreditsSettings = () => {
             </div>
           </Card>
         </div>
-
-        <Card className="glass-card p-6 space-y-6">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-400" />
-            <h2 className="font-display font-semibold text-foreground">AI Burn Rates</h2>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">ChatGPT</p>
-                  <p className="text-xs text-muted-foreground">Low / Medium / High</p>
-                </div>
-                <Switch
-                  checked={settings.model_enabled.chatgpt}
-                  onCheckedChange={(value) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      model_enabled: { ...prev.model_enabled, chatgpt: value },
-                    }))
-                  }
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {(["low", "medium", "high"] as const).map((tier) => (
-                  <div key={tier} className="space-y-2">
-                    <Label className="capitalize">{tier}</Label>
-                    <Input
-                      type="number"
-                      value={settings.burn_rates.chatgpt[tier]}
-                      onChange={(event) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          burn_rates: {
-                            ...prev.burn_rates,
-                            chatgpt: {
-                              ...prev.burn_rates.chatgpt,
-                              [tier]: Number(event.target.value) || 0,
-                            },
-                          },
-                        }))
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Gemini</p>
-                  <p className="text-xs text-muted-foreground">Fast / Standard / Ultra</p>
-                </div>
-                <Switch
-                  checked={settings.model_enabled.gemini}
-                  onCheckedChange={(value) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      model_enabled: { ...prev.model_enabled, gemini: value },
-                    }))
-                  }
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {(["fast", "standard", "ultra"] as const).map((tier) => (
-                  <div key={tier} className="space-y-2">
-                    <Label className="capitalize">{tier}</Label>
-                    <Input
-                      type="number"
-                      value={settings.burn_rates.gemini[tier]}
-                      onChange={(event) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          burn_rates: {
-                            ...prev.burn_rates,
-                            gemini: {
-                              ...prev.burn_rates.gemini,
-                              [tier]: Number(event.target.value) || 0,
-                            },
-                          },
-                        }))
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Card>
 
         <Card className="glass-card p-6 space-y-4">
           <div className="flex items-center gap-2">

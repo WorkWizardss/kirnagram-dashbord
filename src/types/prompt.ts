@@ -1,4 +1,4 @@
-export type PromptStatus = "pending" | "approved" | "rejected" | "modify";
+export type PromptStatus = "pending" | "approved" | "rejected" | "modified" | "modify";
 
 export interface PromptRequest {
   id: string;
@@ -11,8 +11,23 @@ export interface PromptRequest {
   creatorDob?: string;
   title: string;
   promptDescription: string;
+  promptTemplate?: string;
+  promptVariables?: Array<{
+    key: string;
+    label?: string;
+    input_type?: "text" | "dropdown";
+    options?: string[];
+    placeholder?: string;
+    default_value?: string;
+    required?: boolean;
+  }>;
   aiModel?: string;
   promptCategory?: string;
+  aspectRatio?: string;
+  requireReferenceImage?: boolean;
+  sampleImageUrls?: string[];
+  referenceCorrectImageUrls?: string[];
+  referenceWrongImageUrls?: string[];
   submittedBy?: string;
   tags: string[];
   submittedAt: Date;
@@ -24,5 +39,6 @@ export interface PromptRequest {
   commentsCount?: number;
   remixesCount?: number;
   payoutPerRemix?: number;
+  burnCredits?: number;
   totalEarnings?: number;
 }

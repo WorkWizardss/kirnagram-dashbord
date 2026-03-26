@@ -14,6 +14,14 @@ const Prompts = () => {
 
   const API_URL = "http://localhost:8000/admin/ai-creator/prompts";
 
+  const normalizeStatus = (value: string): PromptRequest["status"] => {
+    const normalized = (value || "").toLowerCase();
+    if (normalized === "modified" || normalized === "modify") return "modified";
+    if (normalized === "approved") return "approved";
+    if (normalized === "rejected") return "rejected";
+    return "pending";
+  };
+
   const selectedRequest = requests.find((r) => r.id === selectedId) || null;
 
   useEffect(() => {
@@ -35,10 +43,18 @@ const Prompts = () => {
           creatorDob: p.creator_contact?.dob,
           title: p.style_name,
           promptDescription: p.prompt_description || "",
+          promptTemplate: p.prompt_template || "",
+          promptVariables: Array.isArray(p.prompt_variables) ? p.prompt_variables : [],
           aiModel: p.ai_model,
+          promptCategory: p.prompt_category || "",
+          aspectRatio: p.aspect_ratio || "",
+          requireReferenceImage: Boolean(p.require_reference_image),
+          sampleImageUrls: Array.isArray(p.sample_image_urls) ? p.sample_image_urls : [],
+          referenceCorrectImageUrls: Array.isArray(p.reference_correct_image_urls) ? p.reference_correct_image_urls : [],
+          referenceWrongImageUrls: Array.isArray(p.reference_wrong_image_urls) ? p.reference_wrong_image_urls : [],
           tags: p.tags || [],
           submittedAt: p.created_at ? new Date(p.created_at) : new Date(),
-          status: p.status,
+          status: normalizeStatus(p.status),
           reason: p.reason,
           previewImage: p.image_url,
           likesCount: Array.isArray(p.likes) ? p.likes.length : p.likes_count || 0,
@@ -46,6 +62,7 @@ const Prompts = () => {
           commentsCount: Array.isArray(p.comments) ? p.comments.length : p.comments_count || 0,
           remixesCount: Array.isArray(p.remixes) ? p.remixes.length : p.remixes_count || 0,
           payoutPerRemix: Number(p.payout_per_remix ?? 1),
+          burnCredits: Number(p.burn_credits ?? 3),
           totalEarnings: (Array.isArray(p.remixes) ? p.remixes.length : p.remixes_count || 0) * Number(p.payout_per_remix ?? 1),
         }));
         setRequests(mapped);

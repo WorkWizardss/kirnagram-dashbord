@@ -27,14 +27,21 @@ interface PromptPreviewProps {
   onModify: (id: string) => void;
   onUpdatePayout?: (id: string, payoutPerRemix: number) => void;
   updatingPayout?: boolean;
+  onUpdateBurnCredits?: (id: string, burnCredits: number) => void;
+  updatingBurnCredits?: boolean;
 }
 
-export function PromptPreview({ request, onAccept, onReject, onModify, onUpdatePayout, updatingPayout = false }: PromptPreviewProps) {
+export function PromptPreview({ request, onAccept, onReject, onModify, onUpdatePayout, updatingPayout = false, onUpdateBurnCredits, updatingBurnCredits = false }: PromptPreviewProps) {
   const [payoutInput, setPayoutInput] = useState(1);
+  const [burnCreditsInput, setBurnCreditsInput] = useState(3);
 
   useEffect(() => {
     setPayoutInput(request?.payoutPerRemix ?? 1);
   }, [request?.id, request?.payoutPerRemix]);
+
+  useEffect(() => {
+    setBurnCreditsInput(request?.burnCredits ?? 3);
+  }, [request?.id, request?.burnCredits]);
 
   if (!request) {
     return (
@@ -47,7 +54,7 @@ export function PromptPreview({ request, onAccept, onReject, onModify, onUpdateP
     );
   }
 
-  const isActionable = request.status === "pending" || request.status === "modify";
+  const isActionable = request.status === "pending" || request.status === "modified" || request.status === "modify";
   const currentPayout = request.payoutPerRemix ?? 1;
   const estimatedEarnings = (request.remixesCount ?? 0) * currentPayout;
 
@@ -119,12 +126,12 @@ export function PromptPreview({ request, onAccept, onReject, onModify, onUpdateP
                 "text-sm px-3 py-1",
                 request.status === "approved" && "border-emerald-500/50 text-emerald-500 bg-emerald-500/10",
                 request.status === "rejected" && "border-red-500/50 text-red-500 bg-red-500/10",
-                request.status === "modify" && "border-orange-500/50 text-orange-500 bg-orange-500/10"
+                (request.status === "modify" || request.status === "modified") && "border-orange-500/50 text-orange-500 bg-orange-500/10"
               )}
             >
               {request.status === "approved" && "Approved"}
               {request.status === "rejected" && "Rejected"}
-              {request.status === "modify" && "Needs Modification"}
+              {(request.status === "modify" || request.status === "modified") && "Modified"}
             </Badge>
           )}
         </div>
@@ -170,6 +177,74 @@ export function PromptPreview({ request, onAccept, onReject, onModify, onUpdateP
               </div>
             </CardContent>
           </Card>
+
+          {request.promptTemplate && (
+            <Card className="bg-card/50 border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Prompt Template</span>
+                </div>
+                <div className="bg-background/50 rounded-lg p-4 border border-border">
+                  <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                    {request.promptTemplate}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {Array.isArray(request.promptVariables) && request.promptVariables.length > 0 && (
+            <Card className="bg-card/50 border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                  <Tag className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Template Variables</span>
+                </div>
+                <div className="space-y-2">
+                  {request.promptVariables.map((item) => (
+                    <div key={item.key} className="rounded-lg border border-border bg-background/40 p-3">
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="font-semibold">{item.label || item.key}</span>
+                        <Badge variant="outline">{item.input_type || "text"}</Badge>
+                        {item.required && <Badge variant="secondary">Required</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Key: {item.key}</p>
+                      {item.placeholder && (
+                        <p className="text-xs text-muted-foreground mt-1">Placeholder: {item.placeholder}</p>
+                      )}
+                      {item.default_value && (
+                        <p className="text-xs text-muted-foreground mt-1">Default: {item.default_value}</p>
+                      )}
+                      {Array.isArray(item.options) && item.options.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Options: {item.options.join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(request.aspectRatio || request.requireReferenceImage || (request.sampleImageUrls || []).length > 0) && (
+            <Card className="bg-card/50 border-border">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Palette className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Generation Setup</span>
+                </div>
+                <div className="grid md:grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <p>Aspect Ratio: {request.aspectRatio || "-"}</p>
+                  <p>Reference Required: {request.requireReferenceImage ? "Yes" : "No"}</p>
+                  <p>Sample Images: {(request.sampleImageUrls || []).length}</p>
+                  <p>Correct References: {(request.referenceCorrectImageUrls || []).length}</p>
+                  <p>Wrong References: {(request.referenceWrongImageUrls || []).length}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {(request.likesCount || request.viewsCount || request.commentsCount || request.remixesCount) && (
             <div className="grid grid-cols-4 gap-3">
@@ -226,6 +301,40 @@ export function PromptPreview({ request, onAccept, onReject, onModify, onUpdateP
             </CardContent>
           </Card>
 
+          <Card className="bg-card/50 border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                <IndianRupee className="w-4 h-4" />
+                <span className="text-xs font-medium uppercase tracking-wider">Burn Credits</span>
+              </div>
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Current burn credits</p>
+                  <p className="text-xl font-semibold text-foreground">{request.burnCredits ?? 3} / remix</p>
+                </div>
+                {request.status === "approved" && onUpdateBurnCredits && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      value={burnCreditsInput}
+                      onChange={(event) => setBurnCreditsInput(Number(event.target.value) || 0)}
+                      className="w-28"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={updatingBurnCredits || burnCreditsInput === (request.burnCredits ?? 3)}
+                      onClick={() => onUpdateBurnCredits(request.id, burnCreditsInput)}
+                    >
+                      {updatingBurnCredits ? "Saving..." : "Update"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+                      Modified
           {/* Tags */}
           <Card className="bg-card/50 border-border">
             <CardContent className="p-4">

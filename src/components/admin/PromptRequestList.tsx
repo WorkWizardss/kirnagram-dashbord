@@ -16,6 +16,7 @@ const statusConfig = {
   pending: { icon: Clock, color: "text-yellow-500", bg: "bg-yellow-500/10" },
   approved: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   rejected: { icon: XCircle, color: "text-red-500", bg: "bg-red-500/10" },
+  modified: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
   modify: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-500/10" },
 };
 
