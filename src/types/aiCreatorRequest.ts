@@ -17,5 +17,9 @@ export interface AICreatorRequest {
   experience?: string;
   portfolio?: string[];
   submittedAt: Date;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "suspended" | "blocked";
+  suspensionDays?: number;
+  suspendedUntil?: string;
+  suspensionReason?: string;
+  blockReason?: string;
 }
