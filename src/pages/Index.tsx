@@ -19,6 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { auth } from "@/lib/firebase";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const MAX_SELECTIONS = 5;
@@ -170,6 +171,17 @@ const Index = () => {
     const query = params.toString();
 
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("No authenticated Firebase user. Please log in again.");
+      }
+
+      const token = await user.getIdToken();
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+
       setLoadingMetrics(true);
       setLoadingAnalytics(true);
       setLoadingTraffic(true);
@@ -177,11 +189,11 @@ const Index = () => {
       setLoadingUsers(true);
 
       const [metricsRes, analyticsRes, trafficRes, trafficUsersRes, usersRes] = await Promise.all([
-        fetch(`${API_BASE}/admin/dashboard/metrics?${query}`),
-        fetch(`${API_BASE}/admin/dashboard/analytics?${query}`),
-        fetch(`${API_BASE}/admin/dashboard/traffic?${query}`),
-        fetch(`${API_BASE}/admin/dashboard/traffic-users?${query}`),
-        fetch(`${API_BASE}/admin/dashboard/users?${query}`),
+        fetch(`${API_BASE}/admin/dashboard/metrics?${query}`, { method: "GET", headers }),
+        fetch(`${API_BASE}/admin/dashboard/analytics?${query}`, { method: "GET", headers }),
+        fetch(`${API_BASE}/admin/dashboard/traffic?${query}`, { method: "GET", headers }),
+        fetch(`${API_BASE}/admin/dashboard/traffic-users?${query}`, { method: "GET", headers }),
+        fetch(`${API_BASE}/admin/dashboard/users?${query}`, { method: "GET", headers }),
       ]);
 
       if (!metricsRes.ok) throw new Error("Failed to load metrics");
